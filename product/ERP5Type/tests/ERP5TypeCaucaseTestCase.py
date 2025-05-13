@@ -168,6 +168,7 @@ class ERP5TypeCaucaseTestCase(ERP5TypeTestCase):
         **self.caucase_certificate_kw
       )
       test_caucase_connector.validate()
+      self.tic()
 
     try:
       self._startCaucaseServer()
