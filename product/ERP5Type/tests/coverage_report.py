@@ -9,6 +9,7 @@ This file is used in two contexts:
 
 from __future__ import print_function
 import datetime
+import glob
 import json
 import logging
 import os
@@ -161,6 +162,14 @@ class CoverageReport(unittest.TestCase):
               raise TimeoutError("Timeout downloading %s" % to_download)
     return downloaded_coverage_path_set
 
+  def _all_python_files(self):
+    for pattern in self._coverage_process.config.report_include:
+      for base in glob.glob(pattern):
+        for root, _, files in os.walk(base):
+          for f in files:
+            if f.endswith('.py'):
+              yield os.path.join(root, f)
+
   def test_coverage_report(self):
     # reports must run from the root of slapos software, because we recorded
     # relative paths.
@@ -181,6 +190,7 @@ class CoverageReport(unittest.TestCase):
     self._coverage_process.html_report(
       directory=os.path.join(log_directory, 'html_report'),
       show_contexts=True,
+      morfs=list(self._all_python_files()),
       # We ignore errors because some tests execute code that does not exist on disk, causing
       # errors like this:
       #   NoSource: No source for code: 'parts/erp5/product/ERP5/Document/UnitTest.py'.
