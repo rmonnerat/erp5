@@ -2,14 +2,13 @@ import json
 import re
 import numpy as np
 
-MAX_PREV_CHUNK_SIZE = 1024 * 1024 # bytes
 MAX_NEW_CHUNK_SIZE = 1024 * 1024 # bytes
 HISTORY_LINE_COUNT = 64
 
 in_data_stream = in_stream['Data Stream']
 progress_indicator = in_stream['Progress Indicator']
 offset_index = progress_indicator.getIntOffsetIndex()
-start = max(0, offset_index - MAX_PREV_CHUNK_SIZE)
+start = max(0, offset_index)
 end = min(in_data_stream.getSize(), offset_index + MAX_NEW_CHUNK_SIZE)
 
 frontend_log_data_array = None
@@ -24,28 +23,16 @@ for array in out_array:
 if offset_index >= end:
   return
 
-previous_log_data = ''.join(
-  [x.decode('utf-8') if isinstance(x, bytes) else x for x in in_data_stream.readChunkList(start, offset_index)]
-)
-new_log_data = ''.join([x.decode('utf-8') for x in in_data_stream.readChunkList(offset_index, end)])
+new_log_data = ''.join([x.decode('utf-8') if isinstance(x, bytes) else x for x in in_data_stream.readChunkList(start, end)])
 
-previous_log_data_line_list = previous_log_data.splitlines()
-new_log_data_line_list = new_log_data.splitlines()
-
-# First previous log line may not be valid JSON due to MAX_PREV_CHUNK_SIZE:
-# Simply discard it
-previous_log_data_line_list = previous_log_data_line_list[1:]
-
-
+log_data_line_list = new_log_data.splitlines()
 # Last new log line may not be valid JSON due to MAX_NEW_CHUNK_SIZE:
-last_new_log_data_line = new_log_data_line_list[-1]
+last_new_log_data_line = log_data_line_list[-1]
 
 match_dict = context.Base_parseFrontendLogLine(last_new_log_data_line)
-if not match_dict:
-  end -= len(last_new_log_data_line)
-  new_log_data_line_list = new_log_data_line_list[:-1]
-
-log_data_line_list = previous_log_data_line_list + new_log_data_line_list
+if not match_dict or "bytes" not in match_dict:
+    end -= len(last_new_log_data_line)
+    log_data_line_list = log_data_line_list[:-1]
 
 parsed_data_list = context.Base_parseFrontendLogLineList(log_data_line_list)
 
