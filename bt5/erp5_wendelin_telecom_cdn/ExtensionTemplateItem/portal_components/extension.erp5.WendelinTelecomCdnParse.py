@@ -6,32 +6,7 @@ CUSTOM_LOG_FORMAT_RE_LIST_LIST = [
    r'^(?P<client_ip>[^\s]+) - (?P<remote_user>[^\s]+) '
    r'\[(?P<date_time>.+)\] "(?P<http_method>[^\s]+) (?P<uri>[^\s]+) '
    r'(?P<http_version>[^\s]+)" (?P<status_code>.+) (?P<bytes>\d+) '
-   r'"(?P<referer>.+)" "(?P<user_agent>.+)" (?P<request_time>\d+)')],
-  ['FALLBACK_1', re.compile(
-   r'^(?P<client_ip>[^\s]+) - (?P<remote_user>[^\s]+) '
-   r'\[(?P<date_time>.+)\] "(?P<http_method>[^\s]+) (?P<uri>[^\s]+) '
-   r'(?P<http_version>[^\s]+)" (?P<status_code>.+) (?P<bytes>\d+) '
-   r'"(?P<referer>.+)" "(?P<user_agent>.+)')],
-  ['FALLBACK_2', re.compile(
-   r'^(?P<client_ip>[^\s]+) - (?P<remote_user>[^\s]+) '
-   r'\[(?P<date_time>.+)\] "(?P<http_method>[^\s]+) (?P<uri>[^\s]+) '
-   r'(?P<http_version>[^\s]+)" (?P<status_code>.+) (?P<bytes>\d+) '
-   r'"(?P<referer>.+)')],
-  ['FALLBACK_3', re.compile(
-   r'^(?P<client_ip>[^\s]+) - (?P<remote_user>[^\s]+) '
-   r'\[(?P<date_time>.+)\] "(?P<http_method>[^\s]+) (?P<uri>[^\s]+) '
-   r'(?P<http_version>[^\s]+)" (?P<status_code>.+) (?P<bytes>\d+)')],
-  ['FALLBACK_4', re.compile(
-   r'^(?P<client_ip>[^\s]+) - (?P<remote_user>[^\s]+) '
-   r'\[(?P<date_time>.+)\] "(?P<http_method>[^\s]+) (?P<uri>[^\s]+) '
-   r'(?P<http_version>[^\s]+)" (?P<status_code>.+)')],
-  ['FALLBACK_5', re.compile(
-   r'^(?P<client_ip>[^\s]+) - (?P<remote_user>[^\s]+) '
-   r'\[(?P<date_time>.+)\] "(?P<http_method>[^\s]+) (?P<uri>[^\s]+) '
-   r'(?P<http_version>[^\s]+)"')],
-  ['FALLBACK_LAST', re.compile(
-   r'^(?P<client_ip>[^\s]+) - (?P<remote_user>[^\s]+) '
-   r'\[(?P<date_time>.+)\] "(?P<http_method>[^\s]+) (?P<uri>[^\s]+)')]
+   r'"(?P<referer>.+)" "(?P<user_agent>.+)" (?P<request_time>\d+)')]
 ]
 
 def Base_parseFrontendLogLine(self, line, REQUEST=None):
