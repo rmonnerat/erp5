@@ -1,0 +1,26 @@
+"""
+  Generate a set of references that will be used to group
+  multiple Data Acquisition Units data.
+
+  for instance, the expected reference is:
+
+   cdnaccess_cdn<cluster>_<instance node>_<shared instance>
+
+  then we would like to build reference list based on:
+
+  - DAU-cdn<cluster>_<shared instance>: Shared instance accross all nodes
+  - DAU-cdn<cluster>_<instance node>: Single node all shared instances
+  - DAU-cdn<cluster>: While cluster, all sites
+
+"""
+reference = context.getReference()
+if reference is None or not reference.startswith("cdnaccess_"):
+  raise ValueError("Reference is not related to CDN.")
+
+_, cluster, node, shared = reference.split("_")
+
+return [
+  "_".join(["DAGGU-", cluster, shared]),
+  "_".join(["DAGGU-", cluster, node]),
+  "_".join(["DAGGU-", cluster])
+]
