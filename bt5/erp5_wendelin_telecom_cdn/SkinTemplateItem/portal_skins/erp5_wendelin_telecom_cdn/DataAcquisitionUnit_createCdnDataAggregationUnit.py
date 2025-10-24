@@ -24,12 +24,12 @@ if not missing_data_aggregation_reference_list:
 
 data_aggregation_value_list = [i.getObject() for i in _data_aggregation_value_list]
 for reference in missing_data_aggregation_reference_list:
-  data_aggregation_value_list.append(
-    portal.data_aggregatation_unit.newContent(
+  data_aggregation_unit = portal.data_aggregation_unit_module.newContent(
       portal_type='Data Aggregation Unit',
       reference=reference
-    )
   )
+  data_aggregation_unit.validate()
+  data_aggregation_value_list.append(data_aggregation_unit)
 
 if batch:
   return data_aggregation_value_list

@@ -7,6 +7,11 @@ if not context.getReference():
   })
 reference = context.getReference()
 
+if aggregate_value_list is None:
+  aggregate_value_list = []
+
+aggregate_value_list.append(context)
+
 # XXX DataAcquisitionUnit_getOrsDataSupply is generic enough, it should
 # be called DataAcquisitionUnit_getDataSupply or something similar
 data_supply = context.DataAcquisitionUnit_getOrsDataSupply()
@@ -42,7 +47,7 @@ data_supply.newContent(
   reference='ingestion_operation',
   quantity=1,
   int_index=1,
-  aggregate_value=context,
+  aggregate_value_list=aggregate_value_list,
   resource='data_operation_module/ingest_cdn_access_log_data'
 ).validate()
 

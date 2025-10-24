@@ -8,9 +8,9 @@
 
   then we would like to build reference list based on:
 
-  - DAU-cdn<cluster>_<shared instance>: Shared instance accross all nodes
-  - DAU-cdn<cluster>_<instance node>: Single node all shared instances
-  - DAU-cdn<cluster>: While cluster, all sites
+  - DAGGU-cdn<cluster>_<shared instance>: Shared instance accross all nodes
+  - DAGGU-cdn<cluster>_<instance node>: Single node all shared instances
+  - DAGGU-cdn<cluster>: While cluster, all sites
 
 """
 reference = context.getReference()
@@ -20,7 +20,7 @@ if reference is None or not reference.startswith("cdnaccess_"):
 _, cluster, node, shared = reference.split("_")
 
 return [
-  "_".join(["DAGGU-", cluster, shared]),
-  "_".join(["DAGGU-", cluster, node]),
-  "_".join(["DAGGU-", cluster])
+  "DAGGU-%s" % "_".join([cluster, shared]),
+  "DAGGU-%s" % "_".join([cluster, node]),
+  "DAGGU-%s" % cluster
 ]

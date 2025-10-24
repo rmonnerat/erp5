@@ -43,7 +43,12 @@ data_acquisition_unit = portal.data_acquisition_unit_module.newContent(
   data_unit_type='cdn'
 )
 data_acquisition_unit.validate()
-data_supply = data_acquisition_unit.DataAcquisitionUnit_createCdnDataSupply(batch=1)
+
+data_aggregation_unit_list = data_acquisition_unit.DataAcquisitionUnit_createCdnDataAggregationUnit(batch=1)
+
+data_acquisition_unit.DataAcquisitionUnit_createCdnDataSupply(
+  aggregate_value_list=data_aggregation_unit_list,
+  batch=1)
 
 # Not automatic link to a project
 #data_supply.setDestinationProject(destination_project)
