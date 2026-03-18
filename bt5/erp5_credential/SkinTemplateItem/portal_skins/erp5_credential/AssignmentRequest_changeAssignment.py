@@ -1,10 +1,19 @@
 assignment_request = context
 portal = context.getPortalObject()
 assignment = None
+
 person = assignment_request.getDestinationDecisionValue()
 
 if person is None:
   raise ValueError('No person document found')
+
+parent_uid_list = [person.getUid()]
+if (person, 'Person_getAssigmentPlaceholderEntityUidList', None) is not None:
+  # Projects can use other custom configuration for assignments that
+  # are located on other objects (ie.: Organisations or other Person document)
+  parent_uid_list.extend(
+    person.Person_getAssigmentPlaceholderEntityUidList()
+  )
 
 search_kw = {}
 for category in assignment_request.getCategoryList():
@@ -14,7 +23,7 @@ search_kw.pop('strict__destination_decision__uid')
 
 assignment_list = portal.portal_catalog(
   portal_type='Assignment',
-  parent_uid=person.getUid(),
+  parent_uid=parent_uid_list,
   validation_state='open',
   **search_kw
 )
