@@ -561,6 +561,24 @@ def synchronizeDynamicModules(context, force=False):
             LOG("ERP5Type.dynamic", WARNING,
                 "Could not load %s after reset" % tool_name, error=True)
 
+      # Activate the ZODB instances for these critical tools so they
+      # are not ghosts when the PEP 302 import hook or other portal
+      # type class generation needs them. The class was loaded above
+      # but the ZODB instance (persistent ghost from resetCaches)
+      # must be explicitly activated to avoid multi-step lazy
+      # activations that can trigger circular class loading.
+      for tool_name, tool_id in (('Component Tool', 'portal_components'),
+                                  ('Types Tool', 'portal_types')):
+        tool_class = getattr(erp5.portal_type, tool_name, None)
+        if tool_class is not None and not tool_class.__isghost__:
+          tool_instance = getattr(portal, tool_id, None)
+          if tool_instance is not None:
+            try:
+              _ = tool_instance.getId()
+            except Exception:
+              LOG("ERP5Type.dynamic", WARNING,
+                  "Could not activate %s after reset" % tool_id, error=True)
+
     except Exception:
       # Allow easier debugging when the code is wrong as this
       # exception is catched later and re-raised as a BadRequest

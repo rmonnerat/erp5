@@ -3557,6 +3557,39 @@ class TestCircularDependencyFixes(ERP5TypeTestCase):
   def getBusinessTemplateList(self):
     return 'erp5_base',
 
+  def testCoreToolsNotBrokenAfterSynchronize(self):
+    """
+    After synchronizeDynamicModules, Component Tool and Types Tool
+    classes must be fully loadable and their ZODB instances must be
+    accessible. This tests the explicit loadClass calls added in
+    synchronizeDynamicModules (242836ea84) and verifies that tool
+    portal types still load correctly without the filesystem fallback
+    (c0e094da3f) when the ZODB component registry is temporarily
+    unavailable during class regeneration.
+    """
+    portal = self.portal
+    import erp5.portal_type
+
+    synchronizeDynamicModules(portal, force=True)
+
+    for tool_name, tool_id in (('Component Tool', 'portal_components'),
+                                ('Types Tool', 'portal_types')):
+      tool_class = getattr(erp5.portal_type, tool_name, None)
+      self.assertIsNotNone(tool_class,
+        "%s class not found in erp5.portal_type" % tool_name)
+
+      if tool_class.__isghost__:
+        tool_class.loadClass()
+      self.assertFalse(tool_class.__isghost__,
+        "%s class is still a ghost after loadClass" % tool_name)
+      self.assertNotIsInstance(tool_class, ERP5BaseBroken,
+        "%s class is broken" % tool_name)
+
+      tool_instance = getattr(portal, tool_id, None)
+      self.assertIsNotNone(tool_instance,
+        "%s instance not found" % tool_id)
+      self.assertEqual(tool_instance.getId(), tool_id)
+
   def testToolPortalTypesLoadWithFilesystemFallback(self):
     """
     Tool portal types that are not registered in the ZODB component
