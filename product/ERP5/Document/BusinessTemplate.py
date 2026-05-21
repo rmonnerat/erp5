@@ -4348,6 +4348,9 @@ class _ZodbComponentTemplateItem(ObjectTemplateItem):
     installation. (for Document, Test, Extension)
     """
     if getattr(self, '_do_reset', False):
+      LOG("BusinessTemplate._ZodbComponentTemplateItem", INFO,
+          "afterInstall calling reset(force=True) "
+          "transaction=%s" % repr(transaction.get()))
       self.portal_components.reset(force=True)
 
   def afterUninstall(self):

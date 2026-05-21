@@ -79,9 +79,18 @@ def _importFilesystemClass(classpath):
 
 def _importComponentClass(package_fullname, name):
   klass = None
+  full_module_name = package_fullname + '.' + name
+  LOG("ERP5Type.dynamic", INFO,
+      "_importComponentClass: trying %s transaction=%s" % (
+          full_module_name, repr(transaction.get())))
   try:
-    module = import_module(package_fullname + '.' + name)
-  except ImportError:
+    module = import_module(full_module_name)
+    LOG("ERP5Type.dynamic", INFO,
+        "_importComponentClass: import SUCCESS for %s" % full_module_name)
+  except ImportError as e:
+    LOG("ERP5Type.dynamic", WARNING,
+        "_importComponentClass: ImportError for %s: %s" % (
+            full_module_name, e))
     pass
   else:
     try:
@@ -276,6 +285,14 @@ def generatePortalTypeClass(site, portal_type_name):
           except (ImportError, AttributeError):
             pass
         if type_class_path is None and klass is None:
+          LOG("ERP5Type.dynamic", WARNING,
+              "generatePortalTypeClass: FAILED portal_type=%s "
+              "type_class=%s document_class_registry.get=%s "
+              "import_component_class_result=None "
+              "transaction=%s" % (
+                  portal_type_name, type_class,
+                  document_class_registry.get(type_class),
+                  repr(transaction.get())))
           raise AttributeError('Document class %s has not been registered:'
                                ' cannot import it as base of Portal Type %s'
                                % (type_class, portal_type_name))
@@ -426,7 +443,13 @@ def synchronizeDynamicModules(context, force=False):
   # can be reloaded in any way.
   # Emptying the ZODB cache is the last thing short of restarting the whole
   # process.
+  LOG("ERP5Type.dynamic", INFO,
+      "synchronizeDynamicModules: before resetCaches "
+      "transaction=%s" % repr(transaction.get()))
   Connection.resetCaches()
+  LOG("ERP5Type.dynamic", INFO,
+      "synchronizeDynamicModules: after resetCaches "
+      "transaction=%s" % repr(transaction.get()))
 
   import erp5
   with aq_method_lock:

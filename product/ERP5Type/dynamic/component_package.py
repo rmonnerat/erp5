@@ -38,6 +38,7 @@ import collections
 from six import reraise
 import traceback
 
+import transaction
 import coverage
 from Products.ERP5Type.Utils import ensure_list
 from Products.ERP5.ERP5Site import getSite
@@ -45,7 +46,7 @@ from Products.ERP5Type import product_path as ERP5Type_product_path
 from . import aq_method_lock
 from .dynamic_module import PackageType
 from types import ModuleType
-from zLOG import LOG, BLATHER, WARNING
+from zLOG import LOG, BLATHER, INFO, WARNING
 from Acquisition import aq_base
 from importlib import import_module
 from Products.ERP5Type.patches.Restricted import MNAME_MAP
@@ -262,7 +263,6 @@ class ComponentDynamicPackageType(PackageType):
         self.reset_unlocked(sub_package=module)
 
       module_name = package.__name__ + '.' + name
-      LOG("ERP5Type.dynamic.component_package", BLATHER, "Resetting " + module_name)
       # The module must be deleted first from sys.modules to avoid imports in
       # the meantime
       if USE_COMPONENT_PEP_451_LOADER:
@@ -342,7 +342,7 @@ except ImportError: # < v3.4
       if spec is None:
         return None
 
-      if path:
+      if path and not fullname.startswith('erp5.component.'):
         # This has to be done here because cpython2 implementation does not have
         # ModuleNotFoundError nor PathFinder import hook (import of filesystem
         # modules) like PEP-0451 implementation. find_module() returning None is
@@ -439,11 +439,12 @@ if USE_COMPONENT_PEP_451_LOADER:
                           spec.component_id, None)
 
       error_message = None
+      component_state = component is not None and component.getValidationState()
       if component is None:
         error_message = "%s: %s does not exist" % (spec.name, spec.component_id)
-      elif component.getValidationState() not in ('modified', 'validated'):
+      elif component_state not in ('modified', 'validated'):
         error_message = "%s: %s not modified/validated (state=%s)" % (
-          spec.name, spec.component_id, component.getValidationState())
+          spec.name, spec.component_id, component_state)
       if error_message is not None:
         LOG("ERP5Type.dynamic.component_package", WARNING, error_message)
         raise ModuleNotFoundError(error_message)
@@ -792,12 +793,15 @@ class ComponentMetaPathFinder(MetaPathFinder):
     importlib._bootstrap:_find_spec() which acquire Global Import Lock and
     thus may lead to deadlock (see ComponentModuleLoader docstring).
     """
+    LOG("ERP5Type.dynamic.component_package", BLATHER,
+        "find_spec: fullname=%r path=%r target=%r" % (
+            fullname, path, target))
     # fullname=erp5.component.PACKAGE.*: ZODB Components
+    # fullname=Products.PACKAGE.*: Filesystem import backward-compatibility
     if not path:
       if not fullname.startswith('erp5.component.'):
         return None
-    # fullname=Products.PACKAGE.*: Filesystem import backward-compatibility
-    else:
+    elif not fullname.startswith('erp5.component.'):
       # All migrated code used to be in Products package. That's all we know for
       # now without filesystem_import_dict, mapping of filesystem module to its
       # migrated ZODB Component source_reference, created on-demand and
@@ -805,9 +809,9 @@ class ComponentMetaPathFinder(MetaPathFinder):
       import Products
       # XXX: Should we really consider the first one only? For now this is
       #      enough as an ERP5 package is at only place...
-      path = path[0]
+      path0 = path[0]
       for product_path in Products.__path__:
-        if path.startswith(product_path):
+        if path0.startswith(product_path):
           spec = ModuleSpec(fullname, loader=COMPONENT_ALIAS_LOADER)
           spec.component_package_name = None
           spec.component_reference = None
@@ -861,6 +865,9 @@ class ComponentMetaPathFinder(MetaPathFinder):
       # Require ZODB access so going to be resolve in the Loader
       spec.component_real_fullname = None
 
+    LOG("ERP5Type.dynamic.component_package", INFO,
+        "find_spec: returning spec for %s spec loader=%s" % (
+            fullname, spec is not None and spec.loader.__class__.__name__ or None))
     return spec
 
 COMPONENT_META_PATH_FINDER = ComponentMetaPathFinder()
