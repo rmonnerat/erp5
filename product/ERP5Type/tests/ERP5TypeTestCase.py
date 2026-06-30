@@ -165,7 +165,9 @@ def _createTestPromiseConfigurationFile(promise_path, bt5_repository_path_list=N
     promise_config.add_section('portal_templates')
     promise_config.set('portal_templates', 'repository',
                                    ' '.join(bt5_repository_path_list))
-  promise_config.write(open(promise_path, 'w'))
+
+  with open(promise_path, 'w') as f:
+    promise_config.write(f)
 
 def profile_if_environ(environment_var_name):
     if int(os.environ.get(environment_var_name, 0)):
