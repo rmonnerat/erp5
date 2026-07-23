@@ -154,6 +154,40 @@ return %s""" % (attribute, script_name, fake_return)
     )
 
 
+class TemporaryCaptureRedirect(object):
+  """Context manager that replaces Base_redirect and Base_renderForm with
+  lightweight TemporaryPythonScript stubs so skin scripts can be called in
+  tests without triggering a real HTTP redirect or form render.
+
+  Usage::
+
+    with TemporaryCaptureRedirect(self.portal):
+      result = some_skin_script.someMethod(...)
+
+  The redirect returns ``(context, message)`` and the render-form returns
+  ``(form_id, message)``.
+  """
+  def __init__(self, portal):
+    self._redirect = TemporaryPythonScript(
+        portal, 'Base_redirect',
+        'redirect_url=None, keep_items=None, abort_transaction=False, '
+        'status_code=302, **kw',
+        "return context, (keep_items or {}).get('portal_status_message', '')")
+    self._render_form = TemporaryPythonScript(
+        portal, 'Base_renderForm',
+        'form_id=None, message=None, keep_items=None, **kw',
+        "return form_id, message or (keep_items or {}).get("
+        "'portal_status_message', '')")
+
+  def __enter__(self):
+    self._redirect.__enter__()
+    self._render_form.__enter__()
+
+  def __exit__(self, *args):
+    self._render_form.__exit__(*args)
+    self._redirect.__exit__(*args)
+
+
 # dummy objects
 class DummyMailHostMixin(object):
   """Dummy Mail Host that doesn't really send messages and keep a copy in
